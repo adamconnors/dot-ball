@@ -28,6 +28,7 @@ export class AppComponent implements OnInit {
   private readonly ASTEROID_SPEED = 4;
   private readonly ASTEROID_RADIUS = 15;
   private gameOver = false;
+  private spawnInterval: any;
 
   ngOnInit() {
     const canvas = this.canvasRef.nativeElement;
@@ -39,8 +40,66 @@ export class AppComponent implements OnInit {
     // Initialize asteroids
     this.initializeAsteroids();
     
+    // Start asteroid spawning
+    this.startAsteroidSpawning();
+    
     // Start game loop
     this.gameLoop();
+  }
+
+  ngOnDestroy() {
+    if (this.spawnInterval) {
+      clearInterval(this.spawnInterval);
+    }
+  }
+
+  private startAsteroidSpawning() {
+    this.spawnInterval = setInterval(() => {
+      this.spawnAsteroid();
+    }, 5000);
+  }
+
+  private spawnAsteroid() {
+    // Randomly choose which edge to spawn from (0: top, 1: right, 2: bottom, 3: left)
+    const edge = Math.floor(Math.random() * 4);
+    let x = 0, y = 0;  // Initialize variables
+
+    switch (edge) {
+      case 0: // top
+        x = Math.random() * window.innerWidth;
+        y = -this.ASTEROID_RADIUS;
+        break;
+      case 1: // right
+        x = window.innerWidth + this.ASTEROID_RADIUS;
+        y = Math.random() * window.innerHeight;
+        break;
+      case 2: // bottom
+        x = Math.random() * window.innerWidth;
+        y = window.innerHeight + this.ASTEROID_RADIUS;
+        break;
+      case 3: // left
+        x = -this.ASTEROID_RADIUS;
+        y = Math.random() * window.innerHeight;
+        break;
+    }
+
+    // Calculate direction towards current pointer position
+    const dx = this.spaceship.x - x;
+    const dy = this.spaceship.y - y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Normalize and scale the velocity
+    const speed = this.ASTEROID_SPEED;
+    const vx = (dx / distance) * speed;
+    const vy = (dy / distance) * speed;
+
+    this.asteroids.push({
+      x,
+      y,
+      dx: vx,
+      dy: vy,
+      radius: this.ASTEROID_RADIUS
+    });
   }
 
   @HostListener('window:resize')
@@ -68,9 +127,64 @@ export class AppComponent implements OnInit {
     }
   }
 
+  private checkAsteroidCollision(a1: Asteroid, a2: Asteroid) {
+    const dx = a2.x - a1.x;
+    const dy = a2.y - a1.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance < a1.radius + a2.radius) {
+      // Calculate collision normal
+      const nx = dx / distance;
+      const ny = dy / distance;
+      
+      // Calculate relative velocity
+      const relativeVelocityX = a2.dx - a1.dx;
+      const relativeVelocityY = a2.dy - a1.dy;
+      
+      // Calculate relative velocity in terms of the normal direction
+      const velocityAlongNormal = relativeVelocityX * nx + relativeVelocityY * ny;
+      
+      // Do not resolve if velocities are separating
+      if (velocityAlongNormal > 0) return;
+      
+      // Calculate restitution
+      const restitution = 0.5;
+      
+      // Calculate impulse scalar
+      const impulseScalar = -(1 + restitution) * velocityAlongNormal;
+      
+      // Apply impulse
+      a1.dx -= impulseScalar * nx;
+      a1.dy -= impulseScalar * ny;
+      a2.dx += impulseScalar * nx;
+      a2.dy += impulseScalar * ny;
+      
+      // Normalize velocities to maintain constant speed
+      const speed1 = Math.sqrt(a1.dx * a1.dx + a1.dy * a1.dy);
+      const speed2 = Math.sqrt(a2.dx * a2.dx + a2.dy * a2.dy);
+      
+      if (speed1 > 0) {
+        a1.dx = (a1.dx / speed1) * this.ASTEROID_SPEED;
+        a1.dy = (a1.dy / speed1) * this.ASTEROID_SPEED;
+      }
+      
+      if (speed2 > 0) {
+        a2.dx = (a2.dx / speed2) * this.ASTEROID_SPEED;
+        a2.dy = (a2.dy / speed2) * this.ASTEROID_SPEED;
+      }
+      
+      // Move asteroids apart to prevent sticking
+      const overlap = (a1.radius + a2.radius - distance) / 2;
+      a1.x -= overlap * nx;
+      a1.y -= overlap * ny;
+      a2.x += overlap * nx;
+      a2.y += overlap * ny;
+    }
+  }
+
   private updateAsteroids() {
+    // Update positions and check wall collisions
     this.asteroids.forEach(asteroid => {
-      // Update position
       asteroid.x += asteroid.dx;
       asteroid.y += asteroid.dy;
 
@@ -91,6 +205,13 @@ export class AppComponent implements OnInit {
         this.gameOver = true;
       }
     });
+
+    // Check collisions between asteroids
+    for (let i = 0; i < this.asteroids.length; i++) {
+      for (let j = i + 1; j < this.asteroids.length; j++) {
+        this.checkAsteroidCollision(this.asteroids[i], this.asteroids[j]);
+      }
+    }
   }
 
   private draw() {
