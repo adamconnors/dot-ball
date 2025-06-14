@@ -10,7 +10,7 @@ export class AudioService {
   constructor() {
     // Create audio elements
     this.spawnSound = new Audio('assets/sounds/spawn.mp3');
-    this.collisionSound = new Audio('assets/sounds/collision.mp3');
+    this.collisionSound = new Audio('assets/sounds/hit.mp3');
 
     // Preload sounds
     this.spawnSound.load();
@@ -19,6 +19,10 @@ export class AudioService {
     // Set volume
     this.spawnSound.volume = 0.3;
     this.collisionSound.volume = 0.2;
+
+    // Log any loading errors
+    this.spawnSound.onerror = (e) => console.error('Error loading spawn sound:', e);
+    this.collisionSound.onerror = (e) => console.error('Error loading collision sound:', e);
   }
 
   playSpawnSound() {
