@@ -24,9 +24,9 @@ export class AppComponent implements OnInit {
     radius: 15
   };
   private asteroids: Asteroid[] = [];
-  private readonly NUM_ASTEROIDS = 5;
-  private readonly ASTEROID_SPEED = 2;
-  private readonly ASTEROID_RADIUS = 30;
+  private readonly NUM_ASTEROIDS = 20;
+  private readonly ASTEROID_SPEED = 4;
+  private readonly ASTEROID_RADIUS = 15;
   private gameOver = false;
 
   ngOnInit() {
