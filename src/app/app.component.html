@@ -1,1 +1,4 @@
+<button *ngIf="!gameStarted || gameOver" class="start-button" (click)="startGame()">
+  {{ gameOver ? 'Play Again' : 'Start' }}
+</button>
 <canvas #gameCanvas></canvas>

@@ -1,4 +1,5 @@
 import { Component, OnInit, HostListener, ElementRef, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 interface Asteroid {
   x: number;
@@ -11,7 +12,9 @@ interface Asteroid {
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  standalone: true,
+  imports: [CommonModule]
 })
 export class AppComponent implements OnInit {
   @ViewChild('gameCanvas', { static: true }) 
@@ -29,13 +32,28 @@ export class AppComponent implements OnInit {
   private readonly ASTEROID_RADIUS = 15;
   private gameOver = false;
   private spawnInterval: any;
+  private gameStartTime: number = 0;
+  private survivalTime: number = 0;
+  public gameStarted = false;
 
   ngOnInit() {
     const canvas = this.canvasRef.nativeElement;
     this.ctx = canvas.getContext('2d')!;
-    
-    // Set canvas size to match window size
     this.resizeCanvas();
+  }
+
+  ngOnDestroy() {
+    if (this.spawnInterval) {
+      clearInterval(this.spawnInterval);
+    }
+  }
+
+  startGame() {
+    this.gameStarted = true;
+    this.gameOver = false;
+    this.asteroids = [];
+    this.gameStartTime = Date.now();
+    this.survivalTime = 0;
     
     // Initialize asteroids
     this.initializeAsteroids();
@@ -45,12 +63,6 @@ export class AppComponent implements OnInit {
     
     // Start game loop
     this.gameLoop();
-  }
-
-  ngOnDestroy() {
-    if (this.spawnInterval) {
-      clearInterval(this.spawnInterval);
-    }
   }
 
   private startAsteroidSpawning() {
@@ -111,8 +123,10 @@ export class AppComponent implements OnInit {
 
   @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
-    this.spaceship.x = event.clientX;
-    this.spaceship.y = event.clientY;
+    if (this.gameStarted && !this.gameOver) {
+      this.spaceship.x = event.clientX;
+      this.spaceship.y = event.clientY;
+    }
   }
 
   private initializeAsteroids() {
@@ -203,6 +217,10 @@ export class AppComponent implements OnInit {
       
       if (distance < this.spaceship.radius + asteroid.radius) {
         this.gameOver = true;
+        this.survivalTime = (Date.now() - this.gameStartTime) / 1000; // Convert to seconds
+        if (this.spawnInterval) {
+          clearInterval(this.spawnInterval);
+        }
       }
     });
 
@@ -217,6 +235,10 @@ export class AppComponent implements OnInit {
   private draw() {
     // Clear canvas
     this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    if (!this.gameStarted) {
+      return;  // Don't draw anything if game hasn't started
+    }
 
     // Draw spaceship
     this.ctx.beginPath();
@@ -234,17 +256,17 @@ export class AppComponent implements OnInit {
       this.ctx.closePath();
     });
 
-    // Draw game over message
+    // Draw game over message and restart button
     if (this.gameOver) {
       this.ctx.font = '48px Arial';
       this.ctx.fillStyle = '#ffffff';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('Game Over!', window.innerWidth / 2, window.innerHeight / 2);
+      this.ctx.fillText(`Game Over! You survived ${this.survivalTime.toFixed(1)} seconds`, window.innerWidth / 2, window.innerHeight / 2 - 50);
     }
   }
 
   private gameLoop() {
-    if (!this.gameOver) {
+    if (this.gameStarted && !this.gameOver) {
       this.updateAsteroids();
     }
     this.draw();
