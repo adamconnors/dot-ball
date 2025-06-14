@@ -27,10 +27,10 @@ export class AppComponent implements OnInit {
     radius: 15
   };
   private asteroids: Asteroid[] = [];
-  private readonly NUM_ASTEROIDS = 20;
+  private readonly NUM_ASTEROIDS = 1;
   private readonly ASTEROID_SPEED = 4;
   private readonly ASTEROID_RADIUS = 15;
-  private readonly SPAWN_INTERVAL = 5000; // 5 seconds in milliseconds
+  private readonly SPAWN_INTERVAL = 1000; // 5 seconds in milliseconds
   private gameOver = false;
   private spawnInterval: any;
   private gameStartTime: number = 0;
@@ -80,24 +80,24 @@ export class AppComponent implements OnInit {
     const edge = Math.floor(Math.random() * 4);
     let x = 0, y = 0;  // Initialize variables
 
-    switch (edge) {
-      case 0: // top
+   switch (edge) {
+     case 0: // top
         x = Math.random() * window.innerWidth;
-        y = -this.ASTEROID_RADIUS;
-        break;
-      case 1: // right
-        x = window.innerWidth + this.ASTEROID_RADIUS;
-        y = Math.random() * window.innerHeight;
-        break;
-      case 2: // bottom
-        x = Math.random() * window.innerWidth;
-        y = window.innerHeight + this.ASTEROID_RADIUS;
-        break;
-      case 3: // left
-        x = -this.ASTEROID_RADIUS;
-        y = Math.random() * window.innerHeight;
-        break;
-    }
+        y = this.ASTEROID_RADIUS * 1;
+       break;
+     case 1: // right
+       x = window.innerWidth - this.ASTEROID_RADIUS * 2;
+       y = Math.random() * window.innerHeight;
+       break;
+     case 2: // bottom
+       x = Math.random() * window.innerWidth;
+       y = window.innerHeight - this.ASTEROID_RADIUS * 2;
+       break;
+     case 3: // left
+       x = this.ASTEROID_RADIUS * 2;
+       y = Math.random() * window.innerHeight;
+       break;
+   }
 
     // Calculate direction towards current pointer position
     const dx = this.spaceship.x - x;
