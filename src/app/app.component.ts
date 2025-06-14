@@ -30,7 +30,7 @@ export class AppComponent implements OnInit {
   private readonly NUM_ASTEROIDS = 20;
   private readonly ASTEROID_SPEED = 4;
   private readonly ASTEROID_RADIUS = 15;
-  private gameOver = false;
+  public gameOver = false;
   private spawnInterval: any;
   private gameStartTime: number = 0;
   private survivalTime: number = 0;
@@ -54,6 +54,9 @@ export class AppComponent implements OnInit {
     this.asteroids = [];
     this.gameStartTime = Date.now();
     this.survivalTime = 0;
+    
+    // Add game-active class to canvas
+    this.canvasRef.nativeElement.classList.add('game-active');
     
     // Initialize asteroids
     this.initializeAsteroids();
@@ -221,6 +224,8 @@ export class AppComponent implements OnInit {
         if (this.spawnInterval) {
           clearInterval(this.spawnInterval);
         }
+        // Remove game-active class when game is over
+        this.canvasRef.nativeElement.classList.remove('game-active');
       }
     });
 
