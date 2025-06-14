@@ -30,7 +30,8 @@ export class AppComponent implements OnInit {
   private readonly NUM_ASTEROIDS = 20;
   private readonly ASTEROID_SPEED = 4;
   private readonly ASTEROID_RADIUS = 15;
-  public gameOver = false;
+  private readonly SPAWN_INTERVAL = 5000; // 5 seconds in milliseconds
+  private gameOver = false;
   private spawnInterval: any;
   private gameStartTime: number = 0;
   private survivalTime: number = 0;
@@ -71,7 +72,7 @@ export class AppComponent implements OnInit {
   private startAsteroidSpawning() {
     this.spawnInterval = setInterval(() => {
       this.spawnAsteroid();
-    }, 5000);
+    }, this.SPAWN_INTERVAL);
   }
 
   private spawnAsteroid() {
@@ -103,16 +104,28 @@ export class AppComponent implements OnInit {
     const dy = this.spaceship.y - y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    // Normalize and scale the velocity
-    const speed = this.ASTEROID_SPEED;
-    const vx = (dx / distance) * speed;
-    const vy = (dy / distance) * speed;
+    // Calculate base velocity
+    const baseSpeed = this.ASTEROID_SPEED;
+    const vx = (dx / distance) * baseSpeed;
+    const vy = (dy / distance) * baseSpeed;
+
+    // Add some randomness to the velocity while maintaining direction
+    const randomFactor = 0.3; // 30% randomness
+    const randomVx = vx * (1 + (Math.random() - 0.5) * randomFactor);
+    const randomVy = vy * (1 + (Math.random() - 0.5) * randomFactor);
+
+    // Ensure minimum velocity in both directions
+    const minVelocity = baseSpeed * 0.2; // 20% of base speed
+    const finalVx = Math.abs(randomVx) < minVelocity ? 
+      (randomVx < 0 ? -minVelocity : minVelocity) : randomVx;
+    const finalVy = Math.abs(randomVy) < minVelocity ? 
+      (randomVy < 0 ? -minVelocity : minVelocity) : randomVy;
 
     this.asteroids.push({
       x,
       y,
-      dx: vx,
-      dy: vy,
+      dx: finalVx,
+      dy: finalVy,
       radius: this.ASTEROID_RADIUS
     });
   }
