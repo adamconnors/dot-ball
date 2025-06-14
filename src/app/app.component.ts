@@ -1,5 +1,6 @@
 import { Component, OnInit, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AudioService } from './audio.service';
 
 interface Asteroid {
   x: number;
@@ -31,11 +32,13 @@ export class AppComponent implements OnInit {
   private readonly ASTEROID_SPEED = 4;
   private readonly ASTEROID_RADIUS = 15;
   private readonly SPAWN_INTERVAL = 1000; // 5 seconds in milliseconds
-  private gameOver = false;
+  public gameOver = false;
   private spawnInterval: any;
   private gameStartTime: number = 0;
   private survivalTime: number = 0;
   public gameStarted = false;
+
+  constructor(private audioService: AudioService) {}
 
   ngOnInit() {
     const canvas = this.canvasRef.nativeElement;
@@ -128,6 +131,9 @@ export class AppComponent implements OnInit {
       dy: finalVy,
       radius: this.ASTEROID_RADIUS
     });
+
+    // Play spawn sound
+    this.audioService.playSpawnSound();
   }
 
   @HostListener('window:resize')
@@ -163,6 +169,9 @@ export class AppComponent implements OnInit {
     const distance = Math.sqrt(dx * dx + dy * dy);
     
     if (distance < a1.radius + a2.radius) {
+      // Play collision sound
+      this.audioService.playCollisionSound();
+
       // Calculate collision normal
       const nx = dx / distance;
       const ny = dy / distance;
