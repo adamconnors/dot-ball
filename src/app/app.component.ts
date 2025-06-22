@@ -28,7 +28,7 @@ export class AppComponent implements OnInit {
     radius: 15
   };
   private asteroids: Asteroid[] = [];
-  private readonly NUM_ASTEROIDS = 1;
+  private readonly NUM_ASTEROIDS = 5;
   private readonly ASTEROID_SPEED = 4;
   private readonly ASTEROID_RADIUS = 15;
   private readonly SPAWN_INTERVAL = 1000; // 5 seconds in milliseconds
